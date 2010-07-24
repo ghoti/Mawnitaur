@@ -10,8 +10,10 @@ import re
 import punkbuster
 import command
 
+#Set the logger
 console = logging.getLogger('monitor.events')
 
+#Fill the auto-kick words
 kickwords = []
 banwords = []
 
@@ -31,6 +33,7 @@ PBMessages = (
             (re.compile(r'^PunkBuster Server: New Connection \(slot #(?P<slot>\d+)\) (?P<ip>[^:]+):(?P<port>\d+) \[(?P<something>[^\s]+)\]\s"(?P<name>.+)".*$'), 'PBNewConnection')
             )
 
+#player.onJoin <soldier name: string>
 def onPlayerJoin(players, data):
     console.debug('%s connected' % data[0])
     players.connect(data[0])
@@ -43,12 +46,15 @@ def onPlayerAuthenticated(players, data):
         players.connect(data[0])
     p.eaid = data[1]
         
+#player.onLeave <soldier name: string> <soldier info: player info block> 
 def onPlayerLeave(players, data):
     console.debug('%s left' % data[0])
     p = players.getplayer(data[0])
     if p is not None:
         players.disconnect(data[0])
-        
+
+#player.onKill <killing soldier name: string> <killed soldier name: string> <weapon: string> 
+#<headshot: boolean> <killer location: 3 x integer> <killed location: 3 x integes>        
 def onPlayerKill(players, data):
     console.debug('%s killed %s' % (data[0], data[1]))
     attacker = players.getplayer(data[0])
@@ -74,6 +80,7 @@ def onPlayerKill(players, data):
     
     players.addkill(attacker, victim, headshot, weapon)
 
+#player.onSpawn <soldier name: string> <kit: string> <weapons: 3 x string> <gadgets: 3 x string>
 def onPlayerSpawn(players, data):
     console.debug('%s spawned' % data[0])
     player = players.getplayer(data[0])
@@ -81,7 +88,8 @@ def onPlayerSpawn(players, data):
         players.connect(data[0])
         player = players.getplayer(data[0])
     player.kit = data[1]
-    
+
+#player.onChat <source soldier name: string> <text: string> <target group: player subset>    
 def onPlayerChat(players, data):
     console.debug('%s: %s' % (data[0], data[1]))
     who = players.getplayer(data[0])
@@ -104,14 +112,28 @@ def onPlayerChat(players, data):
             console.info('banning %s for really bad language' % who.name)
             
     players.addchat(who, '%s: %s' % (target, chat))
-            
+
+#player.onSquadChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
+#NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p
 def onPlayerSquadchange(players, data):
     console.debug('SquadChange: %s - %s/%s' % (data[0], data[1], data[2]))
     onPlayerTeamchange(players, data)
     
+#player.onTeamChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 def onPlayerTeamchange(players, data):
     console.debug('TeamChange: %s - %s/%s' % (data[0], data[1]. data[2]))
-    
+    p = players.getplayer(data[0])
+    if not p:
+        players.connect(data[0])
+        p = players.getplayer(data[0])
+    p.team = data
+
+#player.onKicked <soldier name: string> <reason: string> 
+def onPlayerKicked(players, data):
+    console.debug('Kicked: %s - %s' % (data[0], data[1]))
+        
+#punkBuster.onMessage <message: string>
+#Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
 def onPunkbusterMessage(players, data):
     console.debug('%s' % data)   
     for regex, name in PBMessages:

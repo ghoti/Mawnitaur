@@ -10,9 +10,16 @@ import time
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
+
+'''
+Start Monitor
+'''
 m = monitor.Monitor()
 threading.Thread(target=m.start).start()
 
+'''
+Create our wsgi object (a fancy name for the status page, heh
+'''
 mon = flask.Flask(__name__)
 mon.debug = True
 
@@ -28,7 +35,9 @@ def index():
         kills=reversed(m.players.kills), chat=reversed(m.players.lastchat), \
         team1=m.players.getteam('1'), team2=m.players.getteam('2'))
 
-
+'''
+Start the status page.  It would seem that _now_ ctrl-c is sufficient to kill everything
+'''
 http_server = HTTPServer(WSGIContainer(mon))
 http_server.listen(8088)
 IOLoop.instance().start()

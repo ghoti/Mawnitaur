@@ -4,6 +4,9 @@ Created on Jul 19, 2010
 @author: ghoti
 '''
 from time import strftime, localtime
+'''
+Player objects hold all our individual player data.
+'''
 class Player(object):
     def __init__(self, name):
         self.name = name
@@ -51,6 +54,12 @@ class Player(object):
         self.death()
         self.suicides += 1 
         
+'''
+Clients is a dict based object that holds all the players, referenced by
+player name since BC2 does not dish out slot numbers or any other handy
+id method.  All names are unique via EA, so using names _should_ be ok...
+Clients also holds the chat log and kill log for the status page
+'''
 class Clients(dict):
     def __init__(self):
         self.lastchat = []

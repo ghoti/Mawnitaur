@@ -2,7 +2,6 @@ import logging
 import socket
 
 import bc2connection as protocol
-from pickle import PROTO
 
 class Rcon(object):
     def __init__(self, host, port, pw):
