@@ -90,7 +90,7 @@ class Clients(dict):
         if player:
             if len(self.lastchat) >= 20:
                 self.lastchat.pop(0)
-            self.lastchat.append('%s - %s: %s' % (strftime("%m/%d %H:%M:%S", localtime()), player.name, chat))
+            self.lastchat.append('%s - %s: %s' % (strftime("%m/%d %H:%M:%S", localtime()), player, chat))
         
     def addkill(self, attacker, victim, headshot, weapon):
         if len(self.kills) >= 10:

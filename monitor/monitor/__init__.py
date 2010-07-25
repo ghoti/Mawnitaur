@@ -34,6 +34,9 @@ class Monitor(object):
         self.passw = self.config.get('server', 'pass')
         
         self.players = clients.Clients()
+    '''
+    go!
+    '''
     def start(self):
         threading.Thread(target=self.event_queue).start()
         self.first_run()
@@ -64,7 +67,10 @@ class Monitor(object):
                 self.log.warning('%s' % detail)
                 self.rcon.serverSocket.close()
                 self.eventlistener.serverSocket.close()
-        
+    '''
+    Sending events to a queue lets us continue grabbing events and not be worried
+    about bottlenecks, like db access, file IO, etc.  Losing data are bad.
+    '''   
     def event_queue(self):
         while self.running:
             if not self.queue.empty():
@@ -84,7 +90,10 @@ class Monitor(object):
                     else:
                         self.log.warning('TODO: %s' % func)
             time.sleep(.001)  
-                        
+    '''
+    This is run the first time monitor is ran.  This connects all players, grabs some initial data.
+    We also set the map, gametype, and ticket counts here too.
+    '''                    
     def first_run(self):
         if not self.rcon:
             self.rcon = rcon.Rcon(self.config.get('server', 'ip'), int(self.config.get('server', 'port')), self.config.get('server', 'pass'))
@@ -125,3 +134,7 @@ class Monitor(object):
             #for i in xrange(numparms):
                 #print initialdata.pop(0)
         self.rcon.disconnect()
+        
+    def scorewatch(self):
+        while self.running:
+            pass

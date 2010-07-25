@@ -92,7 +92,12 @@ def onPlayerSpawn(players, data):
 #player.onChat <source soldier name: string> <text: string> <target group: player subset>    
 def onPlayerChat(players, data):
     console.debug('%s: %s' % (data[0], data[1]))
+    if data[0] == 'Server':
+        return
     who = players.getplayer(data[0])
+    if not who:
+        players.connect(data[0])
+        who = players.getplayer(data[0])
     chat = data[1]
     target = data[2]
     
@@ -111,7 +116,7 @@ def onPlayerChat(players, data):
         if re.search('\\b' + word + '\\b', chat, re.I):
             console.info('banning %s for really bad language' % who.name)
             
-    players.addchat(who, '%s: %s' % (target, chat))
+    players.addchat(who.name, '%s: %s' % (target, chat))
 
 #player.onSquadChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 #NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p
@@ -121,16 +126,30 @@ def onPlayerSquadchange(players, data):
     
 #player.onTeamChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 def onPlayerTeamchange(players, data):
-    console.debug('TeamChange: %s - %s/%s' % (data[0], data[1]. data[2]))
+    console.debug('TeamChange: %s - %s/%s' % (data[0], data[1], data[2]))
     p = players.getplayer(data[0])
     if not p:
         players.connect(data[0])
         p = players.getplayer(data[0])
-    p.team = data
+    p.team = data[1]
 
 #player.onKicked <soldier name: string> <reason: string> 
 def onPlayerKicked(players, data):
     console.debug('Kicked: %s - %s' % (data[0], data[1]))
+    
+#server.onRoundOver <winning team: Team ID>
+def onServerRoundover(players, data):
+    console.debug('Round Over: Winners - Team %s' % data[0])
+    players.addchat('Server', 'Round Over.  Winners: Team %s' % data[0])
+    
+#server.onRoundOverPlayers <end-of-round soldier info : player info block>
+def onServerRoundoverplayers(players, data):
+    console.debug('Round Over Scores')
+
+#server.onRoundOverTeamScores <end-of-round scores: team scores> 
+def onServerRoundOverTeamscores(players, data):
+    console.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
+    players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
         
 #punkBuster.onMessage <message: string>
 #Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
