@@ -34,6 +34,8 @@ PBMessages = (
             (re.compile(r'^PunkBuster Server: New Connection \(slot #(?P<slot>\d+)\) (?P<ip>[^:]+):(?P<port>\d+) \[(?P<something>[^\s]+)\]\s"(?P<name>.+)".*$'), 'PBNewConnection')
             )
 
+db = database.Database()
+
 #player.onJoin <soldier name: string>
 def onPlayerJoin(players, data, rcon):
     console.debug('%s connected' % data[0])
@@ -123,7 +125,7 @@ def onPlayerChat(players, data, rcon):
 #NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p
 def onPlayerSquadchange(players, data, rcon):
     console.debug('SquadChange: %s - %s/%s' % (data[0], data[1], data[2]))
-    onPlayerTeamchange(players, data)
+    onPlayerTeamchange(players, data, rcon)
     
 #player.onTeamChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 def onPlayerTeamchange(players, data, rcon):
@@ -155,7 +157,6 @@ def onServerRoundOverTeamscores(players, data, rcon):
 #punkBuster.onMessage <message: string>
 #Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
 def onPunkbusterMessage(players, data, rcon):
-    console.debug('%s' % data)   
     for regex, name in PBMessages:
         match = re.match(regex, str(data[0]).strip())
         if match:

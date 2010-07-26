@@ -4,12 +4,13 @@ Created on Jul 20, 2010
 @author: ghoti
 '''
 import logging
-
+import database
 console = logging.getLogger('monitor.punkbuster')
 
+db = database.Database()
 '''
 PunkBuster Server: New Connection \(slot #(?P<slot>\d+)\) (?P<ip>[^:]+):(?P<port>\d+) \[(?P<something>[^\s]+)\]\s"(?P<name>.+)".*$')
-'''                          
+'''              
 def PBNewConnection(players, data):
     console.debug(data.groups())
     p = players.getplayer(data.group('name'))
@@ -44,6 +45,7 @@ def PBPlayerGuid(players, data):
         p = players.getplayer(data[0])
     p.pbid = data.group('pbid')
     p.id = data.group('ip')
+    db.write_player(p)
 
 '''
 PunkBuster Server: Master Query Sent to \((?P<pbmaster>[^\s]+)\) (?P<ip>[^:]+)$

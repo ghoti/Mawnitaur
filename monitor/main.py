@@ -21,7 +21,8 @@ threading.Thread(target=m.start).start()
 Create our wsgi object (a fancy name for the status page, heh
 '''
 mon = flask.Flask(__name__)
-mon.debug = True
+#mon.debug = True
+
 
 '''
 return flask.render_template('status.html', host=self.host, map=self.map_name(self.map) + ' ' + self.round[0] + '/' + self.round[1], gametype=(self.gametype[0].upper() + self.gametype[1:]),\
