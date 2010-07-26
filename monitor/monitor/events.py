@@ -7,8 +7,9 @@ from __future__ import with_statement
 import logging
 import re
 
-import punkbuster
 import command
+import database
+import punkbuster
 
 #Set the logger
 console = logging.getLogger('monitor.events')
@@ -34,12 +35,12 @@ PBMessages = (
             )
 
 #player.onJoin <soldier name: string>
-def onPlayerJoin(players, data):
+def onPlayerJoin(players, data, rcon):
     console.debug('%s connected' % data[0])
     players.connect(data[0])
 
 #player.onAuthenticated <soldier name: string> <player GUID: guid>
-def onPlayerAuthenticated(players, data):
+def onPlayerAuthenticated(players, data, rcon):
     console.debug('%s received ea_guid' % data[0])
     p = players.getplayer(data[0])
     if p is None:
@@ -47,7 +48,7 @@ def onPlayerAuthenticated(players, data):
     p.eaid = data[1]
         
 #player.onLeave <soldier name: string> <soldier info: player info block> 
-def onPlayerLeave(players, data):
+def onPlayerLeave(players, data, rcon):
     console.debug('%s left' % data[0])
     p = players.getplayer(data[0])
     if p is not None:
@@ -55,7 +56,7 @@ def onPlayerLeave(players, data):
 
 #player.onKill <killing soldier name: string> <killed soldier name: string> <weapon: string> 
 #<headshot: boolean> <killer location: 3 x integer> <killed location: 3 x integes>        
-def onPlayerKill(players, data):
+def onPlayerKill(players, data, rcon):
     console.debug('%s killed %s' % (data[0], data[1]))
     attacker = players.getplayer(data[0])
     weapon = data[2]
@@ -81,7 +82,7 @@ def onPlayerKill(players, data):
     players.addkill(attacker, victim, headshot, weapon)
 
 #player.onSpawn <soldier name: string> <kit: string> <weapons: 3 x string> <gadgets: 3 x string>
-def onPlayerSpawn(players, data):
+def onPlayerSpawn(players, data, rcon):
     console.debug('%s spawned' % data[0])
     player = players.getplayer(data[0])
     if player is None:
@@ -90,7 +91,7 @@ def onPlayerSpawn(players, data):
     player.kit = data[1]
 
 #player.onChat <source soldier name: string> <text: string> <target group: player subset>    
-def onPlayerChat(players, data):
+def onPlayerChat(players, data, rcon):
     console.debug('%s: %s' % (data[0], data[1]))
     if data[0] == 'Server':
         return
@@ -120,12 +121,12 @@ def onPlayerChat(players, data):
 
 #player.onSquadChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 #NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p
-def onPlayerSquadchange(players, data):
+def onPlayerSquadchange(players, data, rcon):
     console.debug('SquadChange: %s - %s/%s' % (data[0], data[1], data[2]))
     onPlayerTeamchange(players, data)
     
 #player.onTeamChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
-def onPlayerTeamchange(players, data):
+def onPlayerTeamchange(players, data, rcon):
     console.debug('TeamChange: %s - %s/%s' % (data[0], data[1], data[2]))
     p = players.getplayer(data[0])
     if not p:
@@ -134,26 +135,26 @@ def onPlayerTeamchange(players, data):
     p.team = data[1]
 
 #player.onKicked <soldier name: string> <reason: string> 
-def onPlayerKicked(players, data):
+def onPlayerKicked(players, data, rcon):
     console.debug('Kicked: %s - %s' % (data[0], data[1]))
     
 #server.onRoundOver <winning team: Team ID>
-def onServerRoundover(players, data):
+def onServerRoundover(players, data, rcon):
     console.debug('Round Over: Winners - Team %s' % data[0])
     players.addchat('Server', 'Round Over.  Winners: Team %s' % data[0])
     
 #server.onRoundOverPlayers <end-of-round soldier info : player info block>
-def onServerRoundoverplayers(players, data):
+def onServerRoundoverplayers(players, data, rcon):
     console.debug('Round Over Scores')
 
 #server.onRoundOverTeamScores <end-of-round scores: team scores> 
-def onServerRoundOverTeamscores(players, data):
+def onServerRoundOverTeamscores(players, data, rcon):
     console.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
     players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
         
 #punkBuster.onMessage <message: string>
 #Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
-def onPunkbusterMessage(players, data):
+def onPunkbusterMessage(players, data, rcon):
     console.debug('%s' % data)   
     for regex, name in PBMessages:
         match = re.match(regex, str(data[0]).strip())

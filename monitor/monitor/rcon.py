@@ -26,7 +26,13 @@ class Rcon(object):
             
     def disconnect(self):
         if self.serverSocket is not None:
-            pass
+            self.console.debug('Closing rcon connection...')
+            try:
+                self.send('quit')
+            except:
+                pass
+            self.serverSocket.close()
+            self.serverSocket = None
         
     def login(self):
         if self.serverSocket is None:

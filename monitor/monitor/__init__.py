@@ -84,7 +84,7 @@ class Monitor(object):
                     func = 'on%s%s' % (string.capitalize(match.group('actor')), string.capitalize(match.group('event')))
                     if hasattr(events, func):
                         func = getattr(events, func)
-                        event = func(self.players, data)
+                        event = func(self.players, data, self.rcon)
                         if event:
                             self.queue.put(event)
                     else:

@@ -5,3 +5,14 @@ pass = changeme
 
 [console]
 level = 0
+
+[mysql]
+host = localhost
+user = user
+passwd = changeme
+db = players
+
+[email]
+user = gmailuser
+pass = gmailpass
+send_to = personwhoneedstoknow@server.com
