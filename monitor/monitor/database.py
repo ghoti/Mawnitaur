@@ -27,6 +27,7 @@ class Database(object):
         self.passwd = config.get('mysql', 'passwd')
         self.dbname = config.get('mysql', 'db')
         #self.tempdir = os.path..join('monitor\\')
+        os.path.walk(os.path.join('temp/'), self.pickle_to_db, None)
 
     def open(self):
         if not self.error:
@@ -58,9 +59,9 @@ class Database(object):
                 console.info('db still not accessible')
                 sql = None
                 time.sleep(100)
-            self.error = False
-            console.info('SQL error resolved.. writing files to db...')
-            os.path.walk(os.path.join('temp/'), self.pickle_to_db, None)
+        self.error = False
+        console.info('SQL error resolved.. writing files to db...')
+        os.path.walk(os.path.join('temp/'), self.pickle_to_db, None)
                            
                 
     def write_player(self, player):
