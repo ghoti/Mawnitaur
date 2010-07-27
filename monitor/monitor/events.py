@@ -40,6 +40,8 @@ db = database.Database()
 def onPlayerJoin(players, data, rcon):
     console.debug('%s connected' % data[0])
     players.connect(data[0])
+    p = players.getplayer(data[0])
+    
 
 #player.onAuthenticated <soldier name: string> <player GUID: guid>
 def onPlayerAuthenticated(players, data, rcon):
@@ -94,7 +96,7 @@ def onPlayerSpawn(players, data, rcon):
 
 #player.onChat <source soldier name: string> <text: string> <target group: player subset>    
 def onPlayerChat(players, data, rcon):
-    console.debug('%s: %s' % (data[0], data[1]))
+    console.debug('%s: %s: %s' % (data[0], data[1], data[2]))
     if data[0] == 'Server':
         return
     who = players.getplayer(data[0])
@@ -120,6 +122,7 @@ def onPlayerChat(players, data, rcon):
             console.info('banning %s for really bad language' % who.name)
             
     players.addchat(who.name, '%s: %s' % (target, chat))
+    command.command(who, chat, rcon, players)
 
 #player.onSquadChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 #NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p

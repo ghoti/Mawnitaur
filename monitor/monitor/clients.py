@@ -3,7 +3,13 @@ Created on Jul 19, 2010
 
 @author: ghoti
 '''
+from __future__ import with_statement
 from time import strftime, localtime
+import re
+import logging
+
+console = logging.getLogger('monitor.clients')
+
 '''
 Player objects hold all our individual player data.
 '''
@@ -24,6 +30,7 @@ class Player(object):
         self.squad = 0
         self.kit = ''
         self.warning = 0
+        self.power = 'Public'
         
     def setteam(self, team):
         self.team = team
@@ -68,6 +75,12 @@ class Clients(dict):
     def connect(self, name):
         if not self.has_key(name):
             self[name] = Player(name)
+            with open('admins.txt', 'r') as f:
+                for line in f:
+                    line = line.split(';')
+                    if self[name].name == line[0]:
+                        self[name].power = line[1]
+                        console.info('%s was given %s power level' % (self[name].name, line[1]))
     
     def disconnect(self, name):
         if self.has_key(name):
@@ -85,6 +98,19 @@ class Clients(dict):
             if i.team == team:
                 list.append(i)
         return list
+    
+    def simplesearch(self, player):
+        plist = []
+        for p in self.getAll():
+            if re.search(player, p.name, re.I):
+                plist.append(p)
+        if len(plist) != 1:
+            #self.rc.sndcmd(self.rc.SAY, '\'Ambiguous player defined or player not found, try being more specific...\' player \'%s\'' %
+            #    player.name)
+            
+            return None
+        else:
+            return plist[0]
     
     def addchat(self, player, chat):
         if player:
