@@ -86,11 +86,14 @@ class Database(object):
     def has_been_seen(self, player):
         self.open()
         if not self.error:
-            p = self.db.select(self.db.c.player_name == player.name).execute()
-            if p.fetchone():
-                return True
-            else:
-                return False
+            has = self.db.count(self.db.c.player_name == player.name).execute()
+            if has:
+                return has.fetchone()[0]
+            #p = self.db.select(self.db.c.player_name == player.name).execute()
+            #if p.fetchone():
+            #    return True
+            #else:
+            #    return False
         self.close()
     
     def pickle_to_db(self, arg, dir, files):

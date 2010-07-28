@@ -6,6 +6,7 @@ Created on Jul 19, 2010
 from __future__ import with_statement
 import logging
 import re
+import threading
 
 import command
 import database
@@ -41,6 +42,8 @@ def onPlayerJoin(players, data, rcon):
     console.debug('%s connected' % data[0])
     players.connect(data[0])
     p = players.getplayer(data[0])
+    seen = db.has_been_seen(p)
+    threading.Timer(60, welcome_messager, args=[p, rcon, seen], name=p.name).start()
     
 
 #player.onAuthenticated <soldier name: string> <player GUID: guid>
@@ -142,18 +145,20 @@ def onPlayerTeamchange(players, data, rcon):
 #player.onKicked <soldier name: string> <reason: string> 
 def onPlayerKicked(players, data, rcon):
     console.debug('Kicked: %s - %s' % (data[0], data[1]))
+    rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1]), 'all')
     
 #server.onRoundOver <winning team: Team ID>
 def onServerRoundover(players, data, rcon):
     console.debug('Round Over: Winners - Team %s' % data[0])
     players.addchat('Server', 'Round Over.  Winners: Team %s' % data[0])
+    rcon.send('admin.say', 'Congratulations to Team %s' % data[0], 'all')
     
 #server.onRoundOverPlayers <end-of-round soldier info : player info block>
 def onServerRoundoverplayers(players, data, rcon):
     console.debug('Round Over Scores')
 
 #server.onRoundOverTeamScores <end-of-round scores: team scores> 
-def onServerRoundOverTeamscores(players, data, rcon):
+def onServerRoundoverTeamscores(players, data, rcon):
     console.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
     players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
         
@@ -168,3 +173,23 @@ def onPunkbusterMessage(players, data, rcon):
                 return
             else:
                 console.warning('todo:', data)
+                
+def welcome_messager(player, rcon, seen):
+    data = rcon.send('admin.listPlayers', 'player', player.name)
+    if data:
+        player.tag = data[14]
+        player.eaguid = data[14]
+        player.team = data[15]
+        player.squad = data[16]
+        player.kills += int(data[17])
+        player.deaths += int(data[18])
+    if player.message:
+        rcon.send('admin.yell', player.message, 'player', 'player.name')
+    else:
+        if seen:
+            rcon.send('admin.yell', 'Welcome back to JHF, %s %s! Be sure to visit jhfgames.com and get to know us!' %
+                      (player.tag, player.name), 'player', player.name)
+        else:
+            rcon.send('admin.yell', 'Welcome to JHF, %s %s! Play fair, Have fun and visit us at jhfgames.com sometime!' %
+                      (player.tag, player.name), 'player', player.name)
+        

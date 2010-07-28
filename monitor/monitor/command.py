@@ -13,8 +13,11 @@ from linecache import getline
 console = logging.getLogger('monitor.func')
 
 commandlevels = {
-                 '!chuck':'Public', '!stats':'Public', '!rules':'Public', '!punish':'Recruit'
+                 '!chuck':'Public', '!stats':'Public', '!rules':'Public', '!punish':'Recruit',
+                 '!map':'Recruit',
                 }
+
+adminlevels = {'Public':0, 'Recruit':1, 'Admin':2, 'Super':3}
 
 genericcommand = re.compile(r'^(?P<cid>\'[^\']{2,}\'|[0-9]+|[^\s]{2,}|@[0-9]+)\s?(?P<parms>.*)$', re.I)
 
@@ -26,12 +29,31 @@ Will eventually contain all in-game commands used by admins to police server
 def command(player, chat, rcon, players):
     if re.search('!rules', chat, re.I):
         rules(player, rcon)
+        return
     elif re.search('!chuck', chat, re.I):
         chuck(rcon)
+        return
     elif re.search('!help', chat, re.I):
         help(player, rcon)
-    elif chat.lower().startswith('!punish') and player.power == 'Recruit':
+        return
+    elif re.search('!stats', chat, re.I):
+        stats(player, rcon)
+        return
+    elif chat.lower().startswith('!punish') and adminlevels[player.power] >= adminlevels['Recruit']:
         punish(player, chat, rcon, players)
+        return
+    elif chat.lower().startswith('!map') and adminlevels[player.power] >= adminlevels['Recruit']:
+        map(player, rcon)
+        return
+    elif chat.lower().startswith('!restart') and adminlevels[player.power] >= adminlevels['Recruit']:
+        restart(rcon)
+        return
+    elif chat.lower().startswith('!rotate') and adminlevels[player.power] >= adminlevels['Recruit']:
+        rotate(rcon)
+        return
+    elif chat.lower().startswith('gametype') and adminlevels[player.power] >= adminlevels['Admin']:
+        gametype(player, rcon)
+        return
         
 def rules(player, rcon):
     console.debug('%s has called !rules' % player.name)
@@ -43,6 +65,10 @@ def rules(player, rcon):
 def chuck(rcon):
     fact = getline('chuck.txt', randint(1, 66)).replace('\"', '').replace("\'", '')
     rcon.send('admin.say', fact, 'all')
+    
+def stats(player, rcon):
+    rcon.send('admin.say', '%s: %i kills and %i deaths for a ratio of %.2f' % \
+              (player.kills, player.deaths, player.ratio), 'all')
     
 def help(player, rcon):
     console.debug('%s called !help' % player.name)
@@ -65,4 +91,16 @@ def punish(player, chat, rcon, players):
             rcon.send('admin.killPlayer', miscreant.name)
         else:
             rcon.send('admin.say', 'Ambiguous player or player not found', 'player', player.name)
+            
+def map(player, rcon):
+    rcon.send('admin.say', '!map is not functional just yet... sorry', 'player', player.name)
+    
+def restart(rcon):
+    rcon.send('admin.restartMap')
+    
+def rotate(rcon):
+    rcon.send('admin.runNextLevel')
+    
+def gametype(player, rcon):
+    rcon.send('admin.say', 'Sorry, !gametype has been disabled temporarily', 'player', 'player.name')
             

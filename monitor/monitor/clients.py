@@ -31,6 +31,7 @@ class Player(object):
         self.kit = ''
         self.warning = 0
         self.power = 'Public'
+        self.message = ''
         
     def setteam(self, team):
         self.team = team
@@ -80,6 +81,7 @@ class Clients(dict):
                     line = line.split(';')
                     if self[name].name == line[0]:
                         self[name].power = line[1]
+                        self[name].message = line[2]
                         console.info('%s was given %s power level' % (self[name].name, line[1]))
     
     def disconnect(self, name):
