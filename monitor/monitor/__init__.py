@@ -25,7 +25,8 @@ class Monitor(object):
         self.config = ConfigParser.ConfigParser()
         self.config.readfp(open(os.path.abspath('.') + '\\config.cfg'))
         
-        self.console = console.Logger(self.config.get('console', 'level'))
+        #self.console = console.Logger(self.config.get('console', 'level'))
+        self.console = console.debuglog(self.config.get('console', 'level'))
         
         self.log = logging.getLogger('monitor')
         

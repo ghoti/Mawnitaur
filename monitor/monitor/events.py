@@ -5,15 +5,18 @@ Created on Jul 19, 2010
 '''
 from __future__ import with_statement
 import logging
+import logging.handlers
+import glob
 import re
 import threading
 
 import command
+import console
 import database
 import punkbuster
 
 #Set the logger
-console = logging.getLogger('monitor.events')
+output = logging.getLogger('monitor.events')
 
 #Fill the auto-kick words
 kickwords = []
@@ -37,9 +40,22 @@ PBMessages = (
 
 db = database.Database()
 
+gamelog = logging.getLogger('eventlog')
+gamelog.setLevel(logging.INFO)
+handler = logging.handlers.RotatingFileHandler('../logs/gamelog.txt', maxBytes=1048576, backupCount=100)
+handler.setFormatter(logging.Formatter("%(created)f;%(message)s"))
+gamelog.addHandler(handler)
+chatlog = logging.getLogger('chatlog')
+chatlog.setLevel(logging.INFO)
+handler = logging.handlers.RotatingFileHandler('../logs/chatlog.txt', maxBytes=1048576, backupCount=100)
+handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s', '%m-%d-%Y %H;%M;%S'))
+chatlog.addHandler(handler)
+
+
 #player.onJoin <soldier name: string>
 def onPlayerJoin(players, data, rcon):
-    console.debug('%s connected' % data[0])
+    output.debug('%s connected' % data[0])
+    gamelog.info('onJoin;' + ';'.join(data))
     players.connect(data[0])
     p = players.getplayer(data[0])
     seen = db.has_been_seen(p)
@@ -48,7 +64,7 @@ def onPlayerJoin(players, data, rcon):
 
 #player.onAuthenticated <soldier name: string> <player GUID: guid>
 def onPlayerAuthenticated(players, data, rcon):
-    console.debug('%s received ea_guid' % data[0])
+    output.debug('%s received ea_guid' % data[0])
     p = players.getplayer(data[0])
     if p is None:
         players.connect(data[0])
@@ -56,7 +72,8 @@ def onPlayerAuthenticated(players, data, rcon):
         
 #player.onLeave <soldier name: string> <soldier info: player info block> 
 def onPlayerLeave(players, data, rcon):
-    console.debug('%s left' % data[0])
+    output.debug('%s left' % data[0])
+    gamelog.info('onLeave' + ';'.join(data))
     p = players.getplayer(data[0])
     if p is not None:
         players.disconnect(data[0])
@@ -64,7 +81,8 @@ def onPlayerLeave(players, data, rcon):
 #player.onKill <killing soldier name: string> <killed soldier name: string> <weapon: string> 
 #<headshot: boolean> <killer location: 3 x integer> <killed location: 3 x integes>        
 def onPlayerKill(players, data, rcon):
-    console.debug('%s killed %s' % (data[0], data[1]))
+    output.debug('%s killed %s' % (data[0], data[1]))
+    gamelog.info('onKill;' + ';'.join(data))
     attacker = players.getplayer(data[0])
     weapon = data[2]
     headshot = data[3]
@@ -90,7 +108,7 @@ def onPlayerKill(players, data, rcon):
 
 #player.onSpawn <soldier name: string> <kit: string> <weapons: 3 x string> <gadgets: 3 x string>
 def onPlayerSpawn(players, data, rcon):
-    console.debug('%s spawned' % data[0])
+    output.debug('%s spawned' % data[0])
     player = players.getplayer(data[0])
     if player is None:
         players.connect(data[0])
@@ -99,9 +117,11 @@ def onPlayerSpawn(players, data, rcon):
 
 #player.onChat <source soldier name: string> <text: string> <target group: player subset>    
 def onPlayerChat(players, data, rcon):
-    console.debug('%s: %s: %s' % (data[0], data[1], data[2]))
+    output.debug('%s: %s: %s' % (data[0], data[1], data[2]))
     if data[0] == 'Server':
         return
+    chatlog.info(' - '.join(data))
+    gamelog.info('onChat;' + ';'.join(data))
     who = players.getplayer(data[0])
     if not who:
         players.connect(data[0])
@@ -115,14 +135,14 @@ def onPlayerChat(players, data, rcon):
     for word in kickwords:
         if re.search('\\b' + word + '\\b', chat, re.I):
             if who.warning:
-                console.info('kicking %s for bad language' % who.name)
+                output.info('kicking %s for bad language' % who.name)
             else:
-                console.info('warning %s for bad language' % who.name)
+                output.info('warning %s for bad language' % who.name)
                 who.warning = 1
     
     for word in banwords:
         if re.search('\\b' + word + '\\b', chat, re.I):
-            console.info('banning %s for really bad language' % who.name)
+            output.info('banning %s for really bad language' % who.name)
             
     players.addchat(who.name, '%s: %s' % (target, chat))
     command.command(who, chat, rcon, players)
@@ -130,12 +150,12 @@ def onPlayerChat(players, data, rcon):
 #player.onSquadChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 #NOTE:  We send this info to the teamChange event.  No need to be redundant.. :-p
 def onPlayerSquadchange(players, data, rcon):
-    console.debug('SquadChange: %s - %s/%s' % (data[0], data[1], data[2]))
+    output.debug('SquadChange: %s - %s/%s' % (data[0], data[1], data[2]))
     onPlayerTeamchange(players, data, rcon)
     
 #player.onTeamChange <soldier name: player name> <team: Team ID> <squad: Squad ID>
 def onPlayerTeamchange(players, data, rcon):
-    console.debug('TeamChange: %s - %s/%s' % (data[0], data[1], data[2]))
+    output.debug('TeamChange: %s - %s/%s' % (data[0], data[1], data[2]))
     p = players.getplayer(data[0])
     if not p:
         players.connect(data[0])
@@ -144,22 +164,23 @@ def onPlayerTeamchange(players, data, rcon):
 
 #player.onKicked <soldier name: string> <reason: string> 
 def onPlayerKicked(players, data, rcon):
-    console.debug('Kicked: %s - %s' % (data[0], data[1]))
+    output.debug('Kicked: %s - %s' % (data[0], data[1]))
+    chatlog.info(' - '.join(data))
     rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1]), 'all')
     
 #server.onRoundOver <winning team: Team ID>
 def onServerRoundover(players, data, rcon):
-    console.debug('Round Over: Winners - Team %s' % data[0])
+    output.debug('Round Over: Winners - Team %s' % data[0])
     players.addchat('Server', 'Round Over.  Winners: Team %s' % data[0])
     rcon.send('admin.say', 'Congratulations to Team %s' % data[0], 'all')
     
 #server.onRoundOverPlayers <end-of-round soldier info : player info block>
 def onServerRoundoverplayers(players, data, rcon):
-    console.debug('Round Over Scores')
+    output.debug('Round Over Scores')
 
 #server.onRoundOverTeamScores <end-of-round scores: team scores> 
 def onServerRoundoverTeamscores(players, data, rcon):
-    console.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
+    output.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
     players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
         
 #punkBuster.onMessage <message: string>
@@ -172,7 +193,7 @@ def onPunkbusterMessage(players, data, rcon):
                 getattr(punkbuster, name)(players, match)
                 return
             else:
-                console.warning('todo:', data)
+                output.warning('todo:', data)
                 
 def welcome_messager(player, rcon, seen):
     data = rcon.send('admin.listPlayers', 'player', player.name)
