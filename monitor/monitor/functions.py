@@ -10,6 +10,9 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from os import path
 import smtplib
+import urllib2 as urllib
+import simplejson as json
+import time
 
 console = logging.getLogger('monitor.func')
 
@@ -38,3 +41,16 @@ def mail(subject, text):
         mailServer.close()
     except Exception, error:
         console.error('Email could not be sent! %s' % error)
+        
+def player_rank(player):
+    try:
+        url = 'http://api.bfbcs.com/api/pc?players=%s&fields=general' % player.name
+        webFile = urllib.urlopen(url)
+        rank = webFile.read()
+        data = json.loads(rank)
+        player.rank = str(data['players'][0]['rank'])
+        return
+    except Exception, detail:
+        console.error('error fetching rank: %s' % detail)
+        #got to sleep, sometimes the player doesn't exist with this api yet, and we need time to let it update
+        time.sleep(60)

@@ -29,6 +29,7 @@ class Player(object):
         self.team = 0
         self.squad = 0
         self.kit = ''
+        self.rank = '#'
         self.warning = 0
         self.power = 'Public'
         self.message = ''

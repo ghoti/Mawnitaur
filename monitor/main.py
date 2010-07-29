@@ -6,7 +6,6 @@ Created on Jul 20, 2010
 import monitor
 import flask
 import threading
-import time
 from tornado.wsgi import WSGIContainer
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop

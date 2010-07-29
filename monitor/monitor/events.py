@@ -4,16 +4,20 @@ Created on Jul 19, 2010
 @author: ghoti
 '''
 from __future__ import with_statement
+import linecache
 import logging
 import logging.handlers
 import glob
+import random
 import re
+import string
 import threading
 
 import command
 import console
 import database
 import punkbuster
+from functions import player_rank
 
 #Set the logger
 output = logging.getLogger('monitor.events')
@@ -96,12 +100,25 @@ def onPlayerKill(players, data, rcon):
         victim = players.getplayer(data[1])
     
     if attacker.name == victim.name:
+        if attacker.streak >= 10:
+            streak = string.Template(linecache.getline('streakend.txt', random.randint(1,4)))
+            streak = streak.substitute(victag=victim.tag, vicname=victim.name, streak=str(victim.streak), killertag=attacker.tag, killername=attacker.name).strip('\n')
+            rcon.send('admin.say', streak, 'all')
         attacker.death()
     elif attacker.team == victim.team:
+        rcon.send('admin.say', '%s just TEAMKILLED %s!!!', 'all')
         attacker.teamkill()
         victim.death()
     else:
         attacker.kill()
+        if attacker.streak % 10:
+            streak = string.Template(linecache.getline('streak.txt', random.randint(1,5)))
+            streak = streak.substitute(tag=attacker.tag, name=attacker.name, streak=str(attacker.streak)).strip('\n')
+            rcon.send('admin.say', streak, 'all')
+        if victim.streak >= 10:
+            streak = string.Template(linecache.getline('streakend.txt', random.randint(1,4)))
+            streak = streak.substitute(victag=victim.tag, vicname=victim.name, streak=str(victim.streak), killertag=attacker.tag, killername=attacker.name).strip('\n')
+            rcon.send('admin.say', streak, 'all')
         victim.death()
     
     players.addkill(attacker, victim, headshot, weapon)
@@ -219,4 +236,5 @@ def welcome_messager(player, rcon, seen):
         else:
             rcon.send('admin.yell', 'Welcome to JHF, %s %s! Play fair, Have fun and visit us at jhfgames.com sometime!' %
                       (player.tag, player.name),'3000', 'player', player.name)
+    player_rank(player)
         

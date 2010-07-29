@@ -14,7 +14,8 @@ console = logging.getLogger('monitor.func')
 
 commandlevels = {
                  '!chuck':'Public', '!stats':'Public', '!rules':'Public', '!punish':'Recruit',
-                 '!map':'Recruit',
+                 '!map':'Recruit', '!help':'Public', '!rotate':'Recruit', '!kick':'Admin',
+                 '!restart':'Recruit'
                 }
 
 adminlevels = {'Public':0, 'Recruit':1, 'Admin':2, 'Super':3}
@@ -64,7 +65,7 @@ def rules(player, rcon):
     with open('rules.txt', 'r') as f:
         for line in f:
             rcon.send('admin.say', line.strip('\n'), 'player', player.name)
-            time.sleep(2)
+            time.sleep(1.5)
             
 def chuck(rcon):
     fact = getline('chuck.txt', randint(1, 66)).replace('\"', '').replace("\'", '')
@@ -78,7 +79,7 @@ def help(player, rcon):
     console.debug('%s called !help' % player.name)
     available = []
     for c, l in commandlevels.items():
-        if player.power == l:
+        if adminlevels[player.power] >= adminlevels[l]:
             available.append(c)
     rcon.send('admin.say', 'Available commands for player %s:' % player.name, 'player', player.name)
     rcon.send('admin.say', ', '.join(available), 'player', player.name)
