@@ -166,6 +166,7 @@ def onPlayerTeamchange(players, data, rcon):
 def onPlayerKicked(players, data, rcon):
     output.debug('Kicked: %s - %s' % (data[0], data[1]))
     chatlog.info(' - '.join(data))
+    players.addchat('Server', data[1])
     rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1]), 'all')
     
 #server.onRoundOver <winning team: Team ID>

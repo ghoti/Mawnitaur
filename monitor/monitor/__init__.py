@@ -96,6 +96,7 @@ class Monitor(object):
     We also set the map, gametype, and ticket counts here too.
     '''                    
     def first_run(self):
+        self.players.addchat('Server', 'There is hope!  Monitor has a pulse!')
         if not self.rcon:
             self.rcon = rcon.Rcon(self.config.get('server', 'ip'), int(self.config.get('server', 'port')), self.config.get('server', 'pass'))
             self.rcon.connect()

@@ -20,6 +20,7 @@ commandlevels = {
 adminlevels = {'Public':0, 'Recruit':1, 'Admin':2, 'Super':3}
 
 genericcommand = re.compile(r'^(?P<cid>\'[^\']{2,}\'|[0-9]+|[^\s]{2,}|@[0-9]+)\s?(?P<parms>.*)$', re.I)
+kickcommand = re.compile(r'^(?P<command>![^\s]{2,})\s(?P<name>.*)\s(?P<time>[0-9]{1,2})\s(?P<reason>.*)', re.I)
 
 '''
 Nothing to see here yet, move along.
@@ -53,6 +54,9 @@ def command(player, chat, rcon, players):
         return
     elif chat.lower().startswith('!gametype') and adminlevels[player.power] >= adminlevels['Admin']:
         gametype(player, rcon)
+        return
+    elif chat.lower().startswith('!kick') and adminlevels[player.power] >= adminlevels['Admin']:
+        kick(player, chat, rcon, players)
         return
         
 def rules(player, rcon):
@@ -103,4 +107,17 @@ def rotate(rcon):
     
 def gametype(player, rcon):
     rcon.send('admin.say', 'Sorry, !gametype has been disabled temporarily', 'player', player.name)
+    
+def kick(player, chat, rcon, players):
+    console.debug('%s is kicking a player' % player.name)
+    m = re.match(kickcommand, chat)
+    if m:
+        miscreant = players.simple_search(m.group('name'))
+        if miscreant:
+            rcon.send('punkBuster.pb_sv_command', 'PB_SV_Kick %s %s %s' % (miscreant.name, 
+                                                   m.group('time'), m.group('reason')))
+        else:
+            rcon.send('admin.say', 'Ambiguous player or player not found', 'player', player.name)
+    else:
+        rcon.send('admin.say', 'Malformed !kick command - Try again', 'player', player.name)
             
