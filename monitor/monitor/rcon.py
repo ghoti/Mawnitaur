@@ -73,6 +73,8 @@ class Rcon(object):
         if not response:
             return None
         response = protocol.DecodePacket(response)
+        if response[3][0] != 'OK':
+            self.console.error('Bad Rcon command: %s' % response[3][0])
         return response[3]
         
     def enable_events(self):

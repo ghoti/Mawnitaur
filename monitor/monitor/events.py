@@ -73,7 +73,7 @@ def onPlayerAuthenticated(players, data, rcon):
 #player.onLeave <soldier name: string> <soldier info: player info block> 
 def onPlayerLeave(players, data, rcon):
     output.debug('%s left' % data[0])
-    gamelog.info('onLeave' + ';'.join(data))
+    gamelog.info('onLeave;' + data[0])
     p = players.getplayer(data[0])
     if p is not None:
         players.disconnect(data[0])
@@ -185,6 +185,9 @@ def onServerRoundoverTeamscores(players, data, rcon):
 
 def onServerLoadinglevel(players, data, rcon):
     output.debug('Loading Level...' + ','.join(data))
+    
+def onServerLevelstarted(players, data, rcon):
+    output.debug('LevelStarted...' + ','.join(data))
 #punkBuster.onMessage <message: string>
 #Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
 def onPunkbusterMessage(players, data, rcon):
@@ -200,19 +203,19 @@ def onPunkbusterMessage(players, data, rcon):
 def welcome_messager(player, rcon, seen):
     data = rcon.send('admin.listPlayers', 'player', player.name)
     if data:
-        player.tag = data[14]
+        player.tag = data[12]
         player.eaguid = data[14]
         player.team = data[15]
         player.squad = data[16]
         player.kills += int(data[17])
         player.deaths += int(data[18])
-    if player.message:
-        rcon.send('admin.yell', player.message, 'player', 'player.name')
+    if player.message != '\n':
+        rcon.send('admin.yell', player.message.strip('\n'), '3000', 'player', player.name)
     else:
         if seen:
             rcon.send('admin.yell', 'Welcome back to JHF, %s %s! Be sure to visit jhfgames.com and get to know us!' %
-                      (player.tag, player.name), 'player', player.name)
+                      (player.tag, player.name), '3000', 'player', player.name)
         else:
             rcon.send('admin.yell', 'Welcome to JHF, %s %s! Play fair, Have fun and visit us at jhfgames.com sometime!' %
-                      (player.tag, player.name), 'player', player.name)
+                      (player.tag, player.name),'3000', 'player', player.name)
         
