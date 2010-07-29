@@ -51,7 +51,7 @@ def command(player, chat, rcon, players):
     elif chat.lower().startswith('!rotate') and adminlevels[player.power] >= adminlevels['Recruit']:
         rotate(rcon)
         return
-    elif chat.lower().startswith('gametype') and adminlevels[player.power] >= adminlevels['Admin']:
+    elif chat.lower().startswith('!gametype') and adminlevels[player.power] >= adminlevels['Admin']:
         gametype(player, rcon)
         return
         
@@ -68,7 +68,7 @@ def chuck(rcon):
     
 def stats(player, rcon):
     rcon.send('admin.say', '%s: %i kills and %i deaths for a ratio of %.2f' % \
-              (player.kills, player.deaths, player.ratio), 'all')
+              (player.name, player.kills, player.deaths, player.ratio), 'all')
     
 def help(player, rcon):
     console.debug('%s called !help' % player.name)
@@ -76,8 +76,8 @@ def help(player, rcon):
     for c, l in commandlevels.items():
         if player.power == l:
             available.append(c)
-    rcon.send('Available commands for player %s:' % player.name, 'player', player.name)
-    rcon.send(''.join(available), 'player', player.name)
+    rcon.send('admin.say', 'Available commands for player %s:' % player.name, 'player', player.name)
+    rcon.send('admin.say', ', '.join(available), 'player', player.name)
     
 def punish(player, chat, rcon, players):
     console.debug('%s called !punish' % player.name)
@@ -102,5 +102,5 @@ def rotate(rcon):
     rcon.send('admin.runNextLevel')
     
 def gametype(player, rcon):
-    rcon.send('admin.say', 'Sorry, !gametype has been disabled temporarily', 'player', 'player.name')
+    rcon.send('admin.say', 'Sorry, !gametype has been disabled temporarily', 'player', player.name)
             

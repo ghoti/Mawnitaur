@@ -101,9 +101,9 @@ class Clients(dict):
                 list.append(i)
         return list
     
-    def simplesearch(self, player):
+    def simple_search(self, player):
         plist = []
-        for p in self.getAll():
+        for p in self.values():
             if re.search(player, p.name, re.I):
                 plist.append(p)
         if len(plist) != 1:

@@ -59,7 +59,7 @@ def onPlayerJoin(players, data, rcon):
     players.connect(data[0])
     p = players.getplayer(data[0])
     seen = db.has_been_seen(p)
-    threading.Timer(60, welcome_messager, args=[p, rcon, seen], name=p.name).start()
+    threading.Timer(60, welcome_messager, args=[p, rcon, seen]).start()
     
 
 #player.onAuthenticated <soldier name: string> <player GUID: guid>
@@ -182,7 +182,9 @@ def onServerRoundoverplayers(players, data, rcon):
 def onServerRoundoverTeamscores(players, data, rcon):
     output.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
     players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
-        
+
+def onServerLoadinglevel(players, data, rcon):
+    output.debug('Loading Level...' + ','.join(data))
 #punkBuster.onMessage <message: string>
 #Match a punkbuster message to a set of known/used messages and handle that data elsewhere.
 def onPunkbusterMessage(players, data, rcon):
