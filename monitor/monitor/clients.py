@@ -5,11 +5,15 @@ Created on Jul 19, 2010
 '''
 from __future__ import with_statement
 from time import strftime, localtime
+import ConfigParser
+import os
 import re
 import logging
 
+config = ConfigParser.ConfigParser()
+config.readfp(open(os.path.abspath('.') + '/config.cfg'))
 console = logging.getLogger('monitor.clients')
-
+console.setLevel(int(config.get('console', 'level')))
 '''
 Player objects hold all our individual player data.
 '''

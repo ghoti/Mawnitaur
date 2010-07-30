@@ -14,7 +14,10 @@ import os
 
 from os import path
 
+config = ConfigParser.ConfigParser()
+config.readfp(open(os.path.abspath('.') + '/config.cfg'))
 console = logging.getLogger('monitor.database')
+console.setLevel(int(config.get('console', 'level')))
 
 class Database(object):
     def __init__(self):

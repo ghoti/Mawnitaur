@@ -5,6 +5,7 @@ Created on Jul 19, 2010
 '''
 from __future__ import with_statement
 import linecache
+import ConfigParser
 import logging
 import logging.handlers
 import glob
@@ -20,7 +21,10 @@ import punkbuster
 from functions import player_rank
 
 #Set the logger
+config = ConfigParser.ConfigParser()
+config.readfp(open(os.path.abspath('.') + '/config.cfg'))
 output = logging.getLogger('monitor.events')
+output.setLevel(int(config.get('console', 'level')))
 
 #Fill the auto-kick words
 kickwords = []

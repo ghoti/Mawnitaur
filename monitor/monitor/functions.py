@@ -14,8 +14,13 @@ import urllib
 import simplejson as json
 import time
 import re
+import os
 
-console = logging.getLogger('monitor.func')
+config = ConfigParser.ConfigParser()
+config.readfp(open(os.path.abspath('.') + '/config.cfg'))
+console = logging.getLogger('monitor.funcs')
+console.setLevel(int(config.get('console', 'level')))
+
 
 matchrank = re.compile('(?P<rank>\d+)(?P<ranksuf>\D{2})\s\(<span>(?P<percentile>\d+)(?P<percentsuf>\D{2})')
 

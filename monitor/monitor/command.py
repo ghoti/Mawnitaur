@@ -7,10 +7,15 @@ from __future__ import with_statement
 import logging
 import re
 import time
+import os
+import ConfigParser
 from random import randint
 from linecache import getline
 
-console = logging.getLogger('monitor.func')
+config = ConfigParser.ConfigParser()
+config.readfp(open(os.path.abspath('.') + '/config.cfg'))
+console = logging.getLogger('monitor.commands')
+console.setLevel(int(config.get('console', 'level')))
 
 commandlevels = {
                  '!chuck':'Public', '!stats':'Public', '!rules':'Public', '!punish':'Recruit',

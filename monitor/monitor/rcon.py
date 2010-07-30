@@ -1,5 +1,7 @@
 import logging
 import socket
+import os
+import ConfigParser
 
 import bc2connection as protocol
 
@@ -10,7 +12,10 @@ class Rcon(object):
         self.pw = pw
         self.serverSocket = None
         
+        config = ConfigParser.ConfigParser()
+        config.readfp(open(os.path.abspath('.') + '/config.cfg'))
         self.console = logging.getLogger('monitor.rcon')
+        self.console.setLevel(int(config.get('console', 'level')))
         
     
     def connect(self):
