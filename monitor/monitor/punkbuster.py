@@ -10,8 +10,8 @@ import os
 
 config = ConfigParser.ConfigParser()
 config.readfp(open(os.path.abspath('.') + '/config.cfg'))
-output = logging.getLogger('monitor.events')
-output.setLevel(int(config.get('console', 'level')))
+console = logging.getLogger('monitor.events')
+console.setLevel(int(config.get('console', 'level')))
 db = database.Database()
 '''
 PunkBuster Server: New Connection \(slot #(?P<slot>\d+)\) (?P<ip>[^:]+):(?P<port>\d+) \[(?P<something>[^\s]+)\]\s"(?P<name>.+)".*$')
