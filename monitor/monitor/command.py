@@ -59,6 +59,9 @@ def command(player, chat, rcon, players):
     elif chat.lower().startswith('!kick') and adminlevels[player.power] >= adminlevels['Admin']:
         kick(player, chat, rcon, players)
         return
+    elif chat.lower().startswith('!ban') and adminlevels[player.power] >= adminlevels['Super']:
+        ban(player, chat, rcon, players)
+        return
         
 def rules(player, rcon):
     console.debug('%s has called !rules' % player.name)
@@ -121,4 +124,16 @@ def kick(player, chat, rcon, players):
             rcon.send('admin.say', 'Ambiguous player or player not found', 'player', player.name)
     else:
         rcon.send('admin.say', 'Malformed !kick command - Try again', 'player', player.name)
-            
+
+def ban(player, chat, rcon, players):
+    console.debug('%s is banning a player' % player.name)
+    m = re.match(genericcommand, chat)
+    if m:
+        miscreant = players.simple_search(m.group('parms')[0])
+        if miscreant:
+            rcon.send('punkBuster.pb_sv_command', 'pb_sv_banGUID %s %s %s %s' % (miscreant.pbid, 
+                      miscreant.name, miscreant.ip, ' '.join(m.group('parms')[1:])))
+        else:
+            rcon.send('admin.say', 'Ambiguous player or player not found', 'player', player.name)
+    else:
+        rcon.send('admin.say', 'Malformed !ban command - Try Again', 'player', player.name)

@@ -13,6 +13,7 @@ import time
 import clients
 import console
 import events
+import functions
 import rcon
 
 class Monitor(object):
@@ -116,6 +117,7 @@ class Monitor(object):
         self.totalrounds = initialdata[7]
         self.team1score = initialdata[9]
         self.team2score = initialdata[10]
+        self.serverrank, self.serverperc = functions.rank_scrape()
         
         initialdata = self.rcon.send('admin.listPlayers', 'all')
         initialdata = initialdata[1:]
@@ -133,10 +135,23 @@ class Monitor(object):
             player.deaths = int(initialdata.pop(0))
             initialdata.pop(0)
             initialdata.pop(0)
+            threading.Thread(target=functions.player_rank, args=[player]).start()
             #for i in xrange(numparms):
                 #print initialdata.pop(0)
         self.rcon.disconnect()
         
     def scorewatch(self):
         while self.running:
-            pass
+            try:
+                data = self.rcon.send('serverInfo')
+                self.team1score = data[9]
+                self.team2score = data[10]
+                self.map = data[5]
+                self.gametype = data[4]
+            except Exception, error:
+                self.log.error('error in watching scores %s' % error)
+            try:
+                self.serverrank, self.serverperc = functions.rank_scrape()
+            except Exception, error:
+                self.log.error('error in scraping rank: %s' % error)
+            time.sleep(20)

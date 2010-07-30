@@ -10,11 +10,14 @@ from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from os import path
 import smtplib
-import urllib2 as urllib
+import urllib
 import simplejson as json
 import time
+import re
 
 console = logging.getLogger('monitor.func')
+
+matchrank = re.compile('(?P<rank>\d+)(?P<ranksuf>\D{2})\s\(<span>(?P<percentile>\d+)(?P<percentsuf>\D{2})')
 
 def mail(subject, text):
     try:
@@ -43,14 +46,29 @@ def mail(subject, text):
         console.error('Email could not be sent! %s' % error)
         
 def player_rank(player):
+    while True:
+        try:
+            url = 'http://api.bfbcs.com/api/pc?players=%s&fields=general' % player.name
+            webFile = urllib.urlopen(url)
+            rank = webFile.read()
+            data = json.loads(rank)
+            player.rank = str(data['players'][0]['rank'])
+            return
+        except Exception, detail:
+            console.error('error fetching rank: %s' % detail)
+            #got to sleep, sometimes the player doesn't exist with this api yet, and we need time to let it update
+            time.sleep(60)
+            
+def rank_scrape():
     try:
-        url = 'http://api.bfbcs.com/api/pc?players=%s&fields=general' % player.name
-        webFile = urllib.urlopen(url)
-        rank = webFile.read()
-        data = json.loads(rank)
-        player.rank = str(data['players'][0]['rank'])
-        return
-    except Exception, detail:
-        console.error('error fetching rank: %s' % detail)
-        #got to sleep, sometimes the player doesn't exist with this api yet, and we need time to let it update
-        time.sleep(60)
+        content = urllib.urlopen("http://www.gametracker.com/server_info/68.232.162.167:19567/").read()
+        m = re.search(matchrank, content)
+        if m:
+            rank = m.group('rank') + m.group('ranksuf')
+            percent = m.group('percentile') + m.group('percentsuf')
+        else:
+            rank = 'Unkmown'
+            percent = 'Unknown'
+        return [rank, percent]
+    except Exception, error:
+        console.error('Error scraping gt rank: %s' % error)

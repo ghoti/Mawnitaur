@@ -111,7 +111,7 @@ def onPlayerKill(players, data, rcon):
         victim.death()
     else:
         attacker.kill()
-        if attacker.streak % 10:
+        if not attacker.streak % 10:
             streak = string.Template(linecache.getline('streak.txt', random.randint(1,5)))
             streak = streak.substitute(tag=attacker.tag, name=attacker.name, streak=str(attacker.streak)).strip('\n')
             rcon.send('admin.say', streak, 'all')
@@ -153,13 +153,18 @@ def onPlayerChat(players, data, rcon):
         if re.search('\\b' + word + '\\b', chat, re.I):
             if who.warning:
                 output.info('kicking %s for bad language' % who.name)
+                rcon.send('punkBuster.pb_sv_command', 'PB_SV_Kick %s 10 That Language is not Tolerated here.' % (who.name))
             else:
                 output.info('warning %s for bad language' % who.name)
                 who.warning = 1
+                rcon.send('admin.say', 'That language is NOT tolerated here!  This is your only warning!',
+                          'player', who.name)
     
     for word in banwords:
         if re.search('\\b' + word + '\\b', chat, re.I):
             output.info('banning %s for really bad language' % who.name)
+            rcon.send('punkBuster.pb_sv_command', 'pb_sv_banGUID %s %s %s %s' % (who.pbid, 
+                      who.name, who.ip, 'We do NOT tolerate that language here!'))
             
     players.addchat(who.name, '%s: %s' % (target, chat))
     command.command(who, chat, rcon, players)
@@ -183,7 +188,7 @@ def onPlayerTeamchange(players, data, rcon):
 def onPlayerKicked(players, data, rcon):
     output.debug('Kicked: %s - %s' % (data[0], data[1]))
     chatlog.info(' - '.join(data))
-    players.addchat('Server', data[1])
+    players.addchat(data[0], data[1])
     rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1]), 'all')
     
 #server.onRoundOver <winning team: Team ID>
@@ -201,8 +206,10 @@ def onServerRoundoverTeamscores(players, data, rcon):
     output.debug('Round Over Team Scores: Team 1: %s - Team 2: %s' % (data[0], data[1]))
     players.addchat('Server', 'Round scores - Team 1: %s - Team 2: %s' % (data[0], data[1]))
 
+#server.onLoadingLevel  <level name: string> <roundsPlayed: int> <roundsTotal: int>
 def onServerLoadinglevel(players, data, rcon):
     output.debug('Loading Level...' + ','.join(data))
+    players.addchat('Server', 'Map Changed to %s - Round %s of %s' % (data[0], data[1], data[2]))
     
 def onServerLevelstarted(players, data, rcon):
     output.debug('LevelStarted...' + ','.join(data))
@@ -227,7 +234,7 @@ def welcome_messager(player, rcon, seen):
         player.squad = data[16]
         player.kills += int(data[17])
         player.deaths += int(data[18])
-    if player.message != '\n':
+    if player.message == '\n':
         rcon.send('admin.yell', player.message.strip('\n'), '3000', 'player', player.name)
     else:
         if seen:

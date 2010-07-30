@@ -31,9 +31,10 @@ scores=self.scores)
 @mon.route('/')
 def index():
     return flask.render_template('status.html', host=m.host, map=m.map, \
-        gametype=m.gametype, scores=[0,0], pcount=len(m.players), \
+        gametype=m.gametype, scores=[m.team1score, m.team2score], pcount=len(m.players), \
         kills=reversed(m.players.kills), chat=reversed(m.players.lastchat), \
-        team1=m.players.getteam('1'), team2=m.players.getteam('2'))
+        team1=m.players.getteam('1'), team2=m.players.getteam('2'), rank=m.serverrank, \
+        percent=m.serverperc)
 
 '''
 Start the status page.  It would seem that _now_ ctrl-c is sufficient to kill everything
