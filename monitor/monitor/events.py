@@ -148,6 +148,7 @@ def onPlayerChat(players, data, rcon):
     
     if chat.startswith('/'):
         chat = chat[:1]
+        target = 'Private'
         
     for word in kickwords:
         if re.search('\\b' + word + '\\b', chat, re.I):
@@ -164,7 +165,7 @@ def onPlayerChat(players, data, rcon):
         if re.search('\\b' + word + '\\b', chat, re.I):
             output.info('banning %s for really bad language' % who.name)
             rcon.send('punkBuster.pb_sv_command', 'pb_sv_banGUID %s %s %s %s' % (who.pbid, 
-                      who.name, who.ip, 'We do NOT tolerate that language here!'))
+                      who.name, who.ip, 'Monitor Language Ban'))
             
     players.addchat(who.name, '%s: %s' % (target, chat))
     command.command(who, chat, rcon, players)
@@ -189,7 +190,7 @@ def onPlayerKicked(players, data, rcon):
     output.debug('Kicked: %s - %s' % (data[0], data[1]))
     chatlog.info(' - '.join(data))
     players.addchat(data[0], data[1])
-    rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1]), 'all')
+    rcon.send('admin.say', 'Kicked %s for %s' % (data[0], data[1][:99]), 'all')
     
 #server.onRoundOver <winning team: Team ID>
 def onServerRoundover(players, data, rcon):

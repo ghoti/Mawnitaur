@@ -70,13 +70,16 @@ def rules(player, rcon):
             rcon.send('admin.say', line.strip('\n'), 'player', player.name)
             time.sleep(1.5)
             
-def chuck(rcon):
+def chuck(rcon, players):
     fact = getline('chuck.txt', randint(1, 66)).replace('\"', '').replace("\'", '')
     rcon.send('admin.say', fact, 'all')
+    players.addchat('Chuck Norris', fact)
     
-def stats(player, rcon):
+def stats(player, rcon, players):
     rcon.send('admin.say', '%s: %i kills and %i deaths for a ratio of %.2f' % \
               (player.name, player.kills, player.deaths, player.ratio), 'all')
+    players.addchat(player.name, '%i kills and %i deaths for a ratio of %.2f' % \
+              (player.kills, player.deaths, player.ratio))
     
 def help(player, rcon):
     console.debug('%s called !help' % player.name)
@@ -132,7 +135,7 @@ def ban(player, chat, rcon, players):
         miscreant = players.simple_search(m.group('parms')[0])
         if miscreant:
             rcon.send('punkBuster.pb_sv_command', 'pb_sv_banGUID %s %s %s %s' % (miscreant.pbid, 
-                      miscreant.name, miscreant.ip, ' '.join(m.group('parms')[1:])))
+                      miscreant.name, miscreant.ip, m.group('parms')))
         else:
             rcon.send('admin.say', 'Ambiguous player or player not found', 'player', player.name)
     else:

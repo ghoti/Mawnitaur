@@ -112,7 +112,7 @@ class Monitor(object):
         self.currentplayers = initialdata[2]
         self.maxplayers = initialdata[3]
         self.gametype = initialdata[4]
-        self.map = initialdata[5]
+        self.map = initialdata[5].strip('Levels/')
         self.currentround = initialdata[6]
         self.totalrounds = initialdata[7]
         self.team1score = initialdata[9]
@@ -139,6 +139,7 @@ class Monitor(object):
             #for i in xrange(numparms):
                 #print initialdata.pop(0)
         self.rcon.disconnect()
+        threading.Thread(target=self.scorewatch).start()
         
     def scorewatch(self):
         while self.running:
@@ -146,7 +147,7 @@ class Monitor(object):
                 data = self.rcon.send('serverInfo')
                 self.team1score = data[9]
                 self.team2score = data[10]
-                self.map = data[5]
+                self.map = data[5].strip('Levels/')
                 self.gametype = data[4]
             except Exception, error:
                 self.log.error('error in watching scores %s' % error)
