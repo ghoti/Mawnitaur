@@ -21,7 +21,7 @@ class Database(object):
         self.sql = None
         self.error = False
         config = ConfigParser.ConfigParser()
-        config.readfp(open(path.abspath('.') + '\\config.cfg'))
+        config.readfp(open(path.abspath('.') + '/config.cfg'))
         self.host = config.get('mysql', 'host')
         self.user = config.get('mysql', 'user')
         self.passwd = config.get('mysql', 'passwd')
