@@ -35,6 +35,11 @@ def index():
         kills=reversed(m.players.kills), chat=reversed(m.players.lastchat), \
         team1=m.players.getteam('1'), team2=m.players.getteam('2'), rank=m.serverrank, \
         percent=m.serverperc)
+    
+@mon.route('/pcount.html')
+def count():
+    return '<html>\n<head>\n<title></title>\n</head>\n<body style="color: #ffffff; background-color: #000000;  font-size: 12px; font-family: Verdana, Arial, Helvetica, sans-serif;">\n \
+                %s / 32\n</body>\n</html>' % len(m.players)
 
 '''
 Start the status page.  It would seem that _now_ ctrl-c is sufficient to kill everything
