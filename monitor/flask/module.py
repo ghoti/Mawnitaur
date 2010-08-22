@@ -31,7 +31,8 @@ def _register_module(module, static_path):
             path = state.url_prefix + path
         state.app.add_url_rule(path + '/<path:filename>',
                                endpoint='%s.static' % module.name,
-                               view_func=module.send_static_file)
+                               view_func=module.send_static_file,
+                               subdomain=module.subdomain)
     return _register
 
 
@@ -54,7 +55,7 @@ class Module(_PackageBoundObject):
     to be provided to keep them apart.  If different import names are used,
     the rightmost part of the import name is used as name.
 
-    Here an example structure for a larger appliation::
+    Here's an example structure for a larger application::
 
         /myapplication
             /__init__.py
@@ -73,7 +74,7 @@ class Module(_PackageBoundObject):
         app.register_module(admin, url_prefix='/admin')
         app.register_module(frontend)
 
-    And here an example view module (`myapplication/views/admin.py`)::
+    And here's an example view module (`myapplication/views/admin.py`)::
 
         from flask import Module
 

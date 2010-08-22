@@ -45,34 +45,35 @@ getting started guide.
 
 from __future__ import with_statement
 
+import Cookie
 import base64
 import binascii
+import cStringIO
 import calendar
 import contextlib
-import Cookie
-import cStringIO
 import datetime
 import email.utils
-import escape
 import functools
 import gzip
 import hashlib
 import hmac
 import httplib
-import locale
 import logging
 import mimetypes
 import os.path
 import re
-import stack_context
 import stat
 import sys
-import template
 import time
 import types
 import urllib
 import urlparse
 import uuid
+
+from tornado import escape
+from tornado import locale
+from tornado import stack_context
+from tornado import template
 
 class RequestHandler(object):
     """Subclass this class and define get() or post() to make a handler.
@@ -159,6 +160,11 @@ class RequestHandler(object):
         you try (and fail) to produce some output.  The epoll- and kqueue-
         based implementations should detect closed connections even while
         the request is idle.
+
+        Proxies may keep a connection open for a time (perhaps
+        indefinitely) after the client has gone away, so this method
+        may not be called promptly after the end user closes their
+        connection.
         """
         pass
 
@@ -338,6 +344,16 @@ class RequestHandler(object):
         if timestamp < time.time() - 31 * 86400:
             logging.warning("Expired cookie %r", value)
             return None
+        if timestamp > time.time() + 31 * 86400:
+            # _cookie_signature does not hash a delimiter between the
+            # parts of the cookie, so an attacker could transfer trailing
+            # digits from the payload to the timestamp without altering the
+            # signature.  For backwards compatibility, sanity-check timestamp
+            # here instead of modifying _cookie_signature.
+            logging.warning("Cookie timestamp in future; possible tampering %r", value)
+            return None
+        if parts[1].startswith("0"):
+            logging.warning("Tampered cookie %r", value)
         try:
             return base64.b64decode(parts[0])
         except:
@@ -488,7 +504,7 @@ class RequestHandler(object):
         return t.generate(**args)
 
     def flush(self, include_footers=False):
-        """Flushes the current output buffer to the nextwork."""
+        """Flushes the current output buffer to the network."""
         if self.application._wsgi:
             raise Exception("WSGI applications do not support flush()")
 
@@ -1113,8 +1129,8 @@ class Application(object):
         # request so you don't need to restart to see changes
         if self.settings.get("debug"):
             if getattr(RequestHandler, "_templates", None):
-              map(lambda loader: loader.reset(),
-                  RequestHandler._templates.values())
+                map(lambda loader: loader.reset(),
+                    RequestHandler._templates.values())
             RequestHandler._static_hashes = {}
 
         handler._execute(transforms, *args, **kwargs)
@@ -1244,8 +1260,8 @@ class StaticFileHandler(RequestHandler):
             file.close()
 
     def set_extra_headers(self, path):
-      """For subclass to add extra headers to the response"""
-      pass
+        """For subclass to add extra headers to the response"""
+        pass
 
 
 class FallbackHandler(RequestHandler):
@@ -1371,7 +1387,12 @@ def authenticated(method):
             if self.request.method == "GET":
                 url = self.get_login_url()
                 if "?" not in url:
-                    url += "?" + urllib.urlencode(dict(next=self.request.uri))
+                    if urlparse.urlsplit(url).scheme:
+                        # if login url is absolute, make next absolute too
+                        next_url = self.request.full_url()
+                    else:
+                        next_url = self.request.uri
+                    url += "?" + urllib.urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
             raise HTTPError(403)
